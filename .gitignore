@@ -19,3 +19,8 @@
 /.cache/
 /coverage.txt
 /*-debug.log*
+
+# Historical generated files kept locally
+/firecheck
+/gf.txt
+/final.txt
