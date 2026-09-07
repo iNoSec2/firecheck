@@ -95,10 +95,19 @@ Use `-v` for HTTP status details on stderr. You can pass a custom header with `-
 | `-h`, `--help` | | Show usage and a local example. |
 | `--version` | | Show the application version, source commit and Go toolchain, then exit. |
 | `--summary` | off | Print completed result counts, elapsed time and the final exit code to stderr. |
+| `--check-config` | off | Validate options and the output path without requests, file writes or reading stdin. |
 
 Requests have a five-second timeout. TLS certificates are verified, and redirects are not followed. Environment proxy variables are not used. Ctrl+C cancels pending requests and flushes buffered file output; the report can be incomplete.
 
 ## Read the results
+
+Before a run, validate your options locally:
+
+```sh
+firecheck --check-config -u "http://127.0.0.1:19000/?ns=demo-firecheck-default-rtdb" -o results.txt
+```
+
+This validates flags, headers, the optional URL and whether the output names a regular file or has an existing parent directory. It preserves existing files and never creates the output. It does not check stdin, network connectivity, certificate trust or actual write permission. Omit `-u` to validate options alone. Invalid configuration exits with `2`.
 
 When reporting a bug, include `firecheck --version`. Local builds show `dev` until installed from a tagged module version. The commit is `unknown` if build metadata is unavailable; `(modified)` means the build included uncommitted changes. This command does not read stdin or make requests.
 

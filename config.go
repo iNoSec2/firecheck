@@ -37,6 +37,7 @@ type config struct {
 	Verbose     bool
 	Version     bool
 	Summary     bool
+	CheckConfig bool
 }
 
 func parseConfig(args []string, out io.Writer) (config, error) {
@@ -56,6 +57,7 @@ func parseConfig(args []string, out io.Writer) (config, error) {
 	fs.BoolVarP(&help, "help", "h", false, "Show help and examples")
 	fs.BoolVar(&cfg.Version, "version", false, "Show the firecheck version, commit and Go toolchain")
 	fs.BoolVar(&cfg.Summary, "summary", false, "Print completed result counts, elapsed time and exit code to stderr")
+	fs.BoolVar(&cfg.CheckConfig, "check-config", false, "Validate options and output paths without requests, writes or reading stdin")
 	fs.StringVarP(&user, "user", "m", "", "Removed: remote write and delete probes are no longer performed")
 	fs.BoolVarP(&randomAgent, "random-agent", "r", false, "Deprecated compatibility option; uses the firecheck user agent")
 	_ = fs.MarkHidden("user")
@@ -93,7 +95,7 @@ func parseConfig(args []string, out io.Writer) (config, error) {
 	for _, header := range headers {
 		name, value, ok := strings.Cut(header, ":")
 		name, value = strings.TrimSpace(name), strings.TrimSpace(value)
-		if !ok || !validHeaderName(name) || strings.ContainsAny(value, "\r\n\x00") {
+		if !ok || !validHeaderName(name) || !validHeaderValue(value) {
 			return cfg, errors.New("invalid --header; use 'Name: value' without control characters")
 		}
 		cfg.Headers.Set(name, value)
@@ -112,6 +114,15 @@ func validHeaderName(name string) bool {
 	}
 	for _, c := range name {
 		if !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || strings.ContainsRune("!#$%&'*+-.^_`|~", c)) {
+			return false
+		}
+	}
+	return true
+}
+
+func validHeaderValue(value string) bool {
+	for i := 0; i < len(value); i++ {
+		if value[i] < 32 && value[i] != '\t' || value[i] == 127 {
 			return false
 		}
 	}
