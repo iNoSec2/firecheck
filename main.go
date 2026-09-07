@@ -45,6 +45,9 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 	if cfg.CheckConfig {
 		return checkConfig(cfg, out, diagnostics)
 	}
+	if cfg.Doctor {
+		return runDoctor(ctx, ".", out, diagnostics, localDoctorTools())
+	}
 	if cfg.URL == "" && interactive {
 		fmt.Fprintln(diagnostics, "firecheck: provide --url or pipe one URL per line. Try 'firecheck --help'.")
 		return 2

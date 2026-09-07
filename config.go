@@ -38,6 +38,7 @@ type config struct {
 	Version     bool
 	Summary     bool
 	CheckConfig bool
+	Doctor      bool
 }
 
 func parseConfig(args []string, out io.Writer) (config, error) {
@@ -58,6 +59,7 @@ func parseConfig(args []string, out io.Writer) (config, error) {
 	fs.BoolVar(&cfg.Version, "version", false, "Show the firecheck version, commit and Go toolchain")
 	fs.BoolVar(&cfg.Summary, "summary", false, "Print completed result counts, elapsed time and exit code to stderr")
 	fs.BoolVar(&cfg.CheckConfig, "check-config", false, "Validate options and output paths without requests, writes or reading stdin")
+	fs.BoolVar(&cfg.Doctor, "doctor", false, "Check local development tools and emulator configuration without installing anything")
 	fs.StringVarP(&user, "user", "m", "", "Removed: remote write and delete probes are no longer performed")
 	fs.BoolVarP(&randomAgent, "random-agent", "r", false, "Deprecated compatibility option; uses the firecheck user agent")
 	_ = fs.MarkHidden("user")
@@ -74,6 +76,9 @@ func parseConfig(args []string, out io.Writer) (config, error) {
 	}
 	if cfg.Version {
 		return cfg, nil
+	}
+	if cfg.Doctor && cfg.CheckConfig {
+		return cfg, errors.New("use --doctor and --check-config separately")
 	}
 	if fs.NArg() != 0 {
 		return cfg, errors.New("unexpected positional argument; use --url URL")
