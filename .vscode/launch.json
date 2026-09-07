@@ -9,9 +9,9 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${file}",
+            "program": "${workspaceFolder}",
             "env": {},
-            "args": ["-u", "testdb-1ec09.firebaseio.com", "-w", "1"]
+            "args": ["-u", "http://127.0.0.1:19000/?ns=demo-firecheck-default-rtdb", "-w", "1"]
         }
     ]
 }

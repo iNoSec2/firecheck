@@ -13,6 +13,21 @@ import (
 
 var errHelp = errors.New("help requested")
 
+const helpText = `firecheck: Firebase Realtime Database read checks
+
+Usage:
+  firecheck --url URL [options]
+  firecheck [options] < urls.txt
+
+Local emulator example:
+  firecheck -u 'http://127.0.0.1:19000/?ns=demo-firecheck-default-rtdb'
+
+Reads only. Write/delete rule tests run separately in the local emulator.
+TLS certificates are verified. Request timeout: 5 seconds.
+
+Options:
+`
+
 type config struct {
 	URL, Output string
 	Proxy       *url.URL
@@ -45,7 +60,7 @@ func parseConfig(args []string, out io.Writer) (config, error) {
 		return cfg, err
 	}
 	if help {
-		_, err := fmt.Fprint(out, "firecheck: Firebase Realtime Database read checks\n\nUsage:\n  firecheck --url URL [options]\n  firecheck [options] < urls.txt\n\nLocal emulator example:\n  firecheck -u 'http://127.0.0.1:9000/?ns=demo-firecheck'\n\nReads only. Write/delete rule tests run separately in the local emulator.\nTLS certificates are verified. Request timeout: 5 seconds.\n\nOptions:\n"+fs.FlagUsages()+"\nStates: allowed, denied, error, not-run.\nExit codes: 0 completed, 1 operational error, 2 usage error, 130 interrupted.\n")
+		_, err := fmt.Fprint(out, helpText+fs.FlagUsages()+"\nStates: allowed, denied, error, not-run.\nExit codes: 0 completed, 1 operational error, 2 usage error, 130 interrupted.\n")
 		if err != nil {
 			return cfg, err
 		}
