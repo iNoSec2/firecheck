@@ -110,7 +110,7 @@ firecheck --check-config -u "http://127.0.0.1:19000/?ns=demo-firecheck-default-r
 
 This validates flags, headers, the optional URL and whether the output names a regular file or has an existing parent directory. It preserves existing files and never creates the output. It does not check stdin, network connectivity, certificate trust or actual write permission. Omit `-u` to validate options alone. Invalid configuration exits with `2`.
 
-When reporting a bug, include `firecheck --version`. Local builds show `dev` until installed from a tagged module version. The commit is `unknown` if build metadata is unavailable; `(modified)` means the build included uncommitted changes. This command does not read stdin or make requests.
+When reporting a bug, include `firecheck --version`. The version comes from Go's embedded module metadata: it may be a release, a pseudo-version identifying a commit, or `dev` when unavailable. The commit is `unknown` if build metadata is unavailable; `(modified)` means the build included uncommitted changes. This command does not read stdin or make requests.
 
 ## Read the results
 
