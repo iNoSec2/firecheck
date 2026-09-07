@@ -54,7 +54,14 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 	}
 	var saved io.Writer
 	if file != nil {
-		saved = file
+		buffer := bufio.NewWriterSize(file, 32*1024)
+		saved = buffer
+		defer func() {
+			if err := buffer.Flush(); err != nil {
+				fmt.Fprintf(diagnostics, "firecheck: cannot flush output: %v\n", err)
+				code = 1
+			}
+		}()
 	}
 	report := reporter{out: out, saved: saved, simple: cfg.Simple}
 	ctx, cancel := context.WithCancel(ctx)
