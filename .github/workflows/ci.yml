@@ -23,7 +23,12 @@ jobs:
         run: go mod verify
       - name: Check formatting
         shell: bash
-        run: test -z "$(gofmt -l *.go)"
+        run: |
+          unformatted=$(gofmt -l *.go)
+          if [ -n "$unformatted" ]; then
+            printf 'Run gofmt on these files:\n%s\n' "$unformatted"
+            exit 1
+          fi
       - name: Test
         run: go test ./...
       - name: Vet
