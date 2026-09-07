@@ -34,6 +34,13 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 		fmt.Fprintf(diagnostics, "firecheck: %v\nTry 'firecheck --help' for examples.\n", err)
 		return 2
 	}
+	if cfg.Version {
+		if err := writeVersion(out); err != nil {
+			fmt.Fprintf(diagnostics, "firecheck: cannot write version: %v\n", err)
+			return 1
+		}
+		return 0
+	}
 	if cfg.URL == "" && interactive {
 		fmt.Fprintln(diagnostics, "firecheck: provide --url or pipe one URL per line. Try 'firecheck --help'.")
 		return 2

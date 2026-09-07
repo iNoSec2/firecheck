@@ -16,6 +16,7 @@ From this checkout:
 go version
 go install .
 firecheck --help
+firecheck --version
 ```
 
 Go installs the command into `GOBIN`, or `GOPATH/bin` when `GOBIN` is unset. Add that directory to your `PATH` if your shell cannot find `firecheck`. With automatic toolchain selection enabled, Go can download the required toolchain for this module.
@@ -92,10 +93,13 @@ Use `-v` for HTTP status details on stderr. You can pass a custom header with `-
 | `-p`, `--proxy` | none | Use an explicit HTTP or HTTPS proxy. |
 | `-w`, `--workers` | `50` | Set concurrent workers, from `1` to `99`. |
 | `-h`, `--help` | | Show usage and a local example. |
+| `--version` | | Show the application version, source commit and Go toolchain, then exit. |
 
 Requests have a five-second timeout. TLS certificates are verified, and redirects are not followed. Environment proxy variables are not used. Ctrl+C cancels pending requests and flushes buffered file output; the report can be incomplete.
 
 ## Read the results
+
+When reporting a bug, include `firecheck --version`. Local builds show `dev` until installed from a tagged module version. The commit is `unknown` if build metadata is unavailable; `(modified)` means the build included uncommitted changes. This command does not read stdin or make requests.
 
 | State | Meaning |
 | --- | --- |

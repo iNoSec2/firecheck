@@ -35,6 +35,7 @@ type config struct {
 	Workers     int
 	Simple      bool
 	Verbose     bool
+	Version     bool
 }
 
 func parseConfig(args []string, out io.Writer) (config, error) {
@@ -52,6 +53,7 @@ func parseConfig(args []string, out io.Writer) (config, error) {
 	fs.BoolVarP(&cfg.Simple, "simple", "s", false, "Print only URLs with allowed reads")
 	fs.BoolVarP(&cfg.Verbose, "verbose", "v", false, "Print HTTP status details to stderr")
 	fs.BoolVarP(&help, "help", "h", false, "Show help and examples")
+	fs.BoolVar(&cfg.Version, "version", false, "Show the firecheck version, commit and Go toolchain")
 	fs.StringVarP(&user, "user", "m", "", "Removed: remote write and delete probes are no longer performed")
 	fs.BoolVarP(&randomAgent, "random-agent", "r", false, "Deprecated compatibility option; uses the firecheck user agent")
 	_ = fs.MarkHidden("user")
@@ -65,6 +67,9 @@ func parseConfig(args []string, out io.Writer) (config, error) {
 			return cfg, err
 		}
 		return cfg, errHelp
+	}
+	if cfg.Version {
+		return cfg, nil
 	}
 	if fs.NArg() != 0 {
 		return cfg, errors.New("unexpected positional argument; use --url URL")
