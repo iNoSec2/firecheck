@@ -5,29 +5,29 @@
 package main
 
 import (
-	"os"
+	"bufio"
+	"bytes"
+	"crypto/tls"
 	"fmt"
+	"math/rand"
 	"net"
+	"net/http"
+	"net/url"
+	"os"
+	"strings"
 	"sync"
 	"time"
-	"bytes"
-	"bufio"
-	"strings"
-	"net/url"
-	"net/http"
-	"math/rand"
-	"crypto/tls"
-	
+
 	"encoding/json"
 
 	flag "github.com/spf13/pflag"
 )
 
 var (
-	workersArg	      int
+	workersArg        int
 	headerArg         []string
 	urlArg            string
-	userArg			  string
+	userArg           string
 	proxyArg          string
 	outputFileArg     string
 	verboseArg        bool
@@ -36,8 +36,8 @@ var (
 )
 
 type bbTest struct {
-	Txt    string `json:"txt"`
-	User   string  `json:"user"`
+	Txt  string `json:"txt"`
+	User string `json:"user"`
 }
 
 func main() {
@@ -51,12 +51,12 @@ func main() {
 	flag.BoolVarP(&useRandomAgentArg, "random-agent", "r", false, "Set a random User Agent")
 	flag.StringVarP(&outputFileArg, "output", "o", "", "Output file to save the results to")
 	flag.BoolVarP(&notFancyArg, "simple", "s", false, "Display only the url without R W D")
-	
+
 	flag.Parse()
 
 	//concurrency
 	workers := 50
-	if workersArg > 0  && workersArg < 100 {
+	if workersArg > 0 && workersArg < 100 {
 		workers = workersArg
 	}
 
@@ -73,7 +73,7 @@ func main() {
 			fmt.Printf("cannot write %s: %s", outputFileArg, err0.Error())
 			return
 		}
-		
+
 		defer outputFile.Close()
 	}
 
@@ -81,19 +81,19 @@ func main() {
 		wg.Add(1)
 		go func() {
 			for raw := range jobs {
-				
+
 				u, err := url.ParseRequestURI(raw)
 				if err != nil {
 					if verboseArg {
 						fmt.Printf("[-] Invalid url: %s\n", raw)
 					}
 					continue
-				}				
-				
+				}
+
 				processRequest(u, client, outputFile)
 
 			}
-			wg.Done()			
+			wg.Done()
 		}()
 	}
 
@@ -106,8 +106,8 @@ func main() {
 		jobs <- urlArg
 	}
 
-	close(jobs)	
-	wg.Wait()	
+	close(jobs)
+	wg.Wait()
 }
 
 func processRequest(u *url.URL, client *http.Client, outputFile *os.File) {
@@ -115,26 +115,26 @@ func processRequest(u *url.URL, client *http.Client, outputFile *os.File) {
 	if verboseArg {
 		fmt.Printf("[+] Testing: %v\n", u.String())
 	}
-	
+
 	//check read
 	/////////////////////////////////////////////////////////////////////////
-	read, resp, err :=check("R", u, client)
-	write, _, _ :=check("W", u, client)
-	delete, _, _ :=check("D", u, client)
-	
-	if(read || write || delete){
-		if(notFancyArg){
+	read, resp, err := check("R", u, client)
+	write, _, _ := check("W", u, client)
+	delete, _, _ := check("D", u, client)
+
+	if read || write || delete {
+		if notFancyArg {
 			fmt.Printf("%v\n", u.String())
 		} else {
-			str:= "[+] " + u.String() + " => "
-			if(read){
-				str+= " R "
+			str := "[+] " + u.String() + " => "
+			if read {
+				str += " R "
 			}
-			if(write){
-				str+= " W "
+			if write {
+				str += " W "
 			}
-			if(delete){
-				str+= " D "
+			if delete {
+				str += " D "
 			}
 
 			if outputFileArg != "" {
@@ -144,10 +144,10 @@ func processRequest(u *url.URL, client *http.Client, outputFile *os.File) {
 			fmt.Println(str)
 		}
 	} else {
-		if(err != nil && verboseArg){
+		if err != nil && verboseArg {
 			fmt.Printf("[-] Error: %v [%v]\n", err, resp)
 		} else {
-			if(verboseArg){
+			if verboseArg {
 				fmt.Printf("[-] %v [%v]\n", u.String(), resp)
 			}
 		}
@@ -174,11 +174,11 @@ func newClient(proxy string) *http.Client {
 		Transport: tr,
 		Timeout:   time.Second * 5,
 	}
-	
+
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
+		return http.ErrUseLastResponse
 	}
-	
+
 	return client
 }
 
@@ -206,36 +206,36 @@ func getUserAgent() string {
 }
 
 //CheckRead desc
-func check(checkType string, u *url.URL, client *http.Client) (bool, int, error){
+func check(checkType string, u *url.URL, client *http.Client) (bool, int, error) {
 
 	var url string
 	var req *http.Request
 	var err error
 
 	// Read
-	if(checkType == "R"){
+	if checkType == "R" {
 		url = u.Scheme + "://" + u.Host + "/.json"
 		req, err = http.NewRequest("GET", url, nil)
 	}
 
 	// Write
-	if(checkType == "W"){
+	if checkType == "W" {
 		url = u.Scheme + "://" + u.Host + "/BountyTest.json"
 
-		bb := bbTest{Txt:  "Bounty test" }
-		if(len(userArg) > 0){
+		bb := bbTest{Txt: "Bounty test"}
+		if len(userArg) > 0 {
 			bb.User = userArg
 		} else {
 			bb.User = "firecheck"
 		}
 
-		j, _:=json.Marshal(bb)
+		j, _ := json.Marshal(bb)
 
 		req, err = http.NewRequest("PUT", url, bytes.NewBuffer(j))
 	}
 
 	// Delete
-	if(checkType == "D"){
+	if checkType == "D" {
 		url = u.Scheme + "://" + u.Host + "/BountyTest.json"
 		req, err = http.NewRequest("DELETE", url, nil)
 	}
@@ -265,19 +265,19 @@ func check(checkType string, u *url.URL, client *http.Client) (bool, int, error)
 
 	// send the request
 	resp, err := client.Do(req)
-	
+
 	if err != nil {
 		if verboseArg {
 			fmt.Printf("[-] Error: %v\n", err)
 		}
 		return false, 0, err
-	}	
-	
+	}
+
 	defer resp.Body.Close()
 
-	if(resp.StatusCode == 200){
+	if resp.StatusCode == 200 {
 		return true, 200, nil
 	}
-	
+
 	return false, resp.StatusCode, nil
 }
