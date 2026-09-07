@@ -94,6 +94,7 @@ Use `-v` for HTTP status details on stderr. You can pass a custom header with `-
 | `-w`, `--workers` | `50` | Set concurrent workers, from `1` to `99`. |
 | `-h`, `--help` | | Show usage and a local example. |
 | `--version` | | Show the application version, source commit and Go toolchain, then exit. |
+| `--summary` | off | Print completed result counts, elapsed time and the final exit code to stderr. |
 
 Requests have a five-second timeout. TLS certificates are verified, and redirects are not followed. Environment proxy variables are not used. Ctrl+C cancels pending requests and flushes buffered file output; the report can be incomplete.
 
@@ -109,6 +110,14 @@ When reporting a bug, include `firecheck --version`. Local builds show `dev` unt
 | `not-run` | The operation was not attempted. The CLI always reports this for write and delete. |
 
 The default output includes denied and failed checks. Simple output and the output file contain only allowed URLs. With multiple workers, results arrive in completion order.
+
+Add `--summary` to see totals without changing stdout or saved URLs:
+
+```text
+firecheck: summary: 3 completed, 1 allowed, 1 denied, 1 failed; elapsed 125ms; exit 1
+```
+
+The summary counts completed results, including invalid URLs received through stdin. On interruption it covers only results collected so far. File and input failures affect the exit code but are not additional failed URL results. It is printed after file output has been flushed and closed.
 
 | Exit code | Meaning |
 | --- | --- |

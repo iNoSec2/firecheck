@@ -36,6 +36,7 @@ type config struct {
 	Simple      bool
 	Verbose     bool
 	Version     bool
+	Summary     bool
 }
 
 func parseConfig(args []string, out io.Writer) (config, error) {
@@ -54,6 +55,7 @@ func parseConfig(args []string, out io.Writer) (config, error) {
 	fs.BoolVarP(&cfg.Verbose, "verbose", "v", false, "Print HTTP status details to stderr")
 	fs.BoolVarP(&help, "help", "h", false, "Show help and examples")
 	fs.BoolVar(&cfg.Version, "version", false, "Show the firecheck version, commit and Go toolchain")
+	fs.BoolVar(&cfg.Summary, "summary", false, "Print completed result counts, elapsed time and exit code to stderr")
 	fs.StringVarP(&user, "user", "m", "", "Removed: remote write and delete probes are no longer performed")
 	fs.BoolVarP(&randomAgent, "random-agent", "r", false, "Deprecated compatibility option; uses the firecheck user agent")
 	_ = fs.MarkHidden("user")

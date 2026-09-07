@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"strings"
 	"sync"
+	"time"
 )
 
 func main() {
@@ -46,6 +47,15 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 		return 2
 	}
 	var file *os.File
+	var summary runSummary
+	if cfg.Summary {
+		started := time.Now()
+		defer func() {
+			if err := summary.write(diagnostics, time.Since(started), code); err != nil && code == 0 {
+				code = 1
+			}
+		}()
+	}
 	if cfg.Output != "" {
 		file, err = os.OpenFile(cfg.Output, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 		if err != nil {
@@ -135,6 +145,7 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 	count := 0
 	for r := range results {
 		count++
+		summary.add(r)
 		if r.State == stateError {
 			code = 1
 			fmt.Fprintf(diagnostics, "firecheck: %s: %s\n", r.URL, r.Detail)
