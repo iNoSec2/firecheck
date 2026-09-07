@@ -1,0 +1,11 @@
+{
+  "cases": [
+    { "name": "root read is denied", "operation": "read", "path": "/", "expect": "denied" },
+    { "name": "fixture write is allowed", "operation": "write", "path": "/firecheck_tests/{run}/message", "data": { "message": "local rule case" }, "expect": "allowed" },
+    { "name": "fixture read is allowed", "operation": "read", "path": "/firecheck_tests/{run}/message", "expect": "allowed" },
+    { "name": "fixture delete is allowed", "operation": "delete", "path": "/firecheck_tests/{run}/message", "expect": "allowed" },
+    { "name": "locked write is denied", "operation": "write", "path": "/locked/{run}/message", "data": { "message": "denied local case" }, "expect": "denied" },
+    { "name": "locked read is denied", "operation": "read", "path": "/locked/{run}/message", "expect": "denied" },
+    { "name": "locked delete is denied", "operation": "delete", "path": "/locked/{run}/message", "expect": "denied" }
+  ]
+}

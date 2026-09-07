@@ -7,9 +7,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -18,17 +16,12 @@ import (
 // Mutation checks exist only in tests and only reach a literal loopback IP.
 // The fixed demo namespace and fixture rules never use a production project.
 func TestEmulatorRules(t *testing.T) {
-	address := os.Getenv("FIREBASE_DATABASE_EMULATOR_HOST")
-	if address == "" {
-		t.Fatal("start the local emulator with emulators:exec; see README")
-	}
-	host, _, err := net.SplitHostPort(address)
-	if err != nil || !isLoopback(host) {
-		t.Fatal("emulator address must use a literal loopback IP and port")
+	base, err := localEmulatorURL(os.Getenv("FIREBASE_DATABASE_EMULATOR_HOST"))
+	if err != nil {
+		t.Fatal(err)
 	}
 	client := newClient(config{}) // No proxy and no redirects.
 	defer client.CloseIdleConnections()
-	base := url.URL{Scheme: "http", Host: address, RawQuery: "ns=demo-firecheck-default-rtdb"}
 	request := func(method, path, body string) (int, string) {
 		t.Helper()
 		u := base

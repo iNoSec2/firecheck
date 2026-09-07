@@ -100,7 +100,7 @@ Use `-v` for HTTP status details on stderr. You can pass a custom header with `-
 
 Requests have a five-second timeout. TLS certificates are verified, and redirects are not followed. Environment proxy variables are not used. Ctrl+C cancels pending requests and flushes buffered file output; the report can be incomplete.
 
-## Read the results
+## Check your setup
 
 Before a run, validate your options locally:
 
@@ -111,6 +111,8 @@ firecheck --check-config -u "http://127.0.0.1:19000/?ns=demo-firecheck-default-r
 This validates flags, headers, the optional URL and whether the output names a regular file or has an existing parent directory. It preserves existing files and never creates the output. It does not check stdin, network connectivity, certificate trust or actual write permission. Omit `-u` to validate options alone. Invalid configuration exits with `2`.
 
 When reporting a bug, include `firecheck --version`. Local builds show `dev` until installed from a tagged module version. The commit is `unknown` if build metadata is unavailable; `(modified)` means the build included uncommitted changes. This command does not read stdin or make requests.
+
+## Read the results
 
 | State | Meaning |
 | --- | --- |
@@ -175,6 +177,36 @@ npx --yes firebase-tools@15.29.0 emulators:exec --only database --project demo-f
 
 This test requires the emulator environment set by `emulators:exec`. It only accepts a literal loopback IP and uses the fixed `demo-firecheck-default-rtdb` namespace. Test writes use unique child keys and are cleaned up. The fixture in `testdata/database.rules.json` is for local tests only.
 
+### Describe expected rule behavior
+
+Edit `testdata/rule-cases.json` to add regression cases without changing Go code. For example:
+
+```json
+{
+  "cases": [
+    {
+      "name": "locked writes stay denied",
+      "operation": "write",
+      "path": "/locked/{run}/message",
+      "data": { "message": "local test" },
+      "expect": "denied"
+    }
+  ]
+}
+```
+
+| Field | Accepted values |
+| --- | --- |
+| `name` | A unique, nonempty test name. |
+| `operation` | `read`, `write` or `delete`. |
+| `path` | A child under `/firecheck_tests/{run}/` or `/locked/{run}/`. A root `/` case may only read. |
+| `data` | Required non-null JSON for writes; omit for reads and deletes. |
+| `expect` | `allowed` or `denied`. Unexpected HTTP statuses and request failures fail the test. |
+
+`{run}` becomes a unique key for each run. Cases execute in file order as unauthenticated emulator requests. Successful writes are cleaned up after their case, including writes that were unexpectedly allowed. Cases assert permission outcomes; the existing integration test separately verifies write/read/delete data behavior.
+
+The normal `go test ./...` validates the case file without starting Firebase. The integration command above and CI execute every case against the fixture rules. To demonstrate a regression locally, change the root read case's expected result to `allowed`: the integration suite should fail. Restore it to `denied` afterward. No production addresses, custom namespaces or authentication credentials can be supplied to this test runner.
+
 CI builds and tests on Linux, Windows, and macOS. A separate Linux job runs the race detector and emulator suite. To run the race detector locally, use `go test -race ./...` with a supported C compiler installed.
 
 ### Local performance
@@ -197,5 +229,8 @@ On Windows amd64 with Go 1.27.1 and a Ryzen 9 3900X, three runs measured about *
 | `output.go` | Console and file report formatting. |
 | `main_test.go`, `output_test.go` | Regression tests and local benchmarks. |
 | `emulator_test.go` | Optional integration tests using the Firebase emulator. |
+| `version.go`, `summary.go` | Build information and optional run totals. |
+| `preflight.go`, `doctor.go` | Offline configuration validation and local setup diagnostics. |
+| `rule_cases_test.go`, `emulator_cases_test.go` | Validate and execute the declarative local rule cases. |
 
 Generated binaries and historical report files are excluded from version control. Release binaries should be built from a tested commit and attached to a versioned GitHub release.
